@@ -182,21 +182,40 @@ class TestCachedRead:
         file.write("123")
         return file
 
-    def test_read(self):
+    def test_read_text(self):
         file = self.make_initial_file()
-        assert file.cached_read() == "123"
+        assert file.read_text_cached() == "123"
         file.delete()
 
-    def test_changed_file(self):
+    def test_read_text_changed_file(self):
         file = self.make_initial_file()
-        file.cached_read()
+        file.read_text_cached()
         file.write("456")
-        assert file.cached_read() == "123"
+        assert file.read_text_cached() == "123"
         file.delete()
 
-    def test_updating_cache(self):
+    def test_read_text_updating_cache(self):
         file = self.make_initial_file()
-        file.cached_read()
+        file.read_text_cached()
         file.write("456")
-        assert file.cached_read(True) == "456"
+        assert file.read_text_cached(True) == "456"
+        file.delete()
+
+    def test_read_bytes(self):
+        file = self.make_initial_file()
+        assert file.read_bytes_cached() == b"123"
+        file.delete()
+
+    def test_read_bytes_changed_file(self):
+        file = self.make_initial_file()
+        file.read_bytes_cached()
+        file.write("456")
+        assert file.read_bytes_cached() == b"123"
+        file.delete()
+
+    def test_read_bytes_updating_cache(self):
+        file = self.make_initial_file()
+        file.read_bytes_cached()
+        file.write("456")
+        assert file.read_bytes_cached(True) == b"456"
         file.delete()
