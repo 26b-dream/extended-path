@@ -168,7 +168,7 @@ class ExtendedPath((type(Path()))):
             else:
                 shutil.rmtree(self)
 
-    def cached_read(self, reload: bool = False):
+    def read_text_cached(self, reload: bool = False):
         """Read a file and cache the result to avoid reading the file multiple times"""
 
         if not hasattr(self, "cached_content") or reload:
@@ -176,7 +176,7 @@ class ExtendedPath((type(Path()))):
 
         return self.cached_content
 
-    def cache_read_byes(self, reload: bool = False):
+    def read_bytes_cached(self, reload: bool = False):
         """Read a file and cache the result to avoid reading the file multiple times"""
 
         if not hasattr(self, "cached_content_bytes") or reload:
