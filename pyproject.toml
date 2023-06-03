@@ -1,0 +1,33 @@
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.pylint]
+disable = "C0301"
+# C0301 - Line too long: Black makes this redundant
+
+[tool.poetry]
+name = "extended_path"
+version = "0.0.1"
+description = "Extended version of Path"
+authors = ["26b_dream <1@1.1>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.group.dev]
+optional = true
+
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+isort = "*"
+flake8 = "*"
+pytest = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
