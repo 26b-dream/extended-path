@@ -107,7 +107,7 @@ class ExtendedPath((type(Path()))):
         cls,
         *args: str | bytes | os.PathLike[str] | int | datetime | date | float,
         **kwargs: str,
-    ) -> ExtendedPath:
+    ) -> Self:
         path_objects: list[str | ExtendedPath | Path] = []
         args_list = list(args)
 
