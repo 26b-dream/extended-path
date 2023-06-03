@@ -171,15 +171,15 @@ class ExtendedPath((type(Path()))):
     def read_text_cached(self, reload: bool = False):
         """Read a file and cache the result to avoid reading the file multiple times"""
 
-        if not hasattr(self, "cached_content") or reload:
-            self.cached_content = self.read_text()
+        if not hasattr(self, "cached_content_value") or reload:
+            self.cached_content_value = self.read_text()
 
-        return self.cached_content
+        return self.cached_content_value
 
     def read_bytes_cached(self, reload: bool = False):
         """Read a file and cache the result to avoid reading the file multiple times"""
 
-        if not hasattr(self, "cached_content_bytes") or reload:
-            self.cached_content_bytes = self.read_bytes()
+        if not hasattr(self, "read_bytes_cached_value") or reload:
+            self.read_bytes_cached_value = self.read_bytes()
 
-        return self.cached_content_bytes
+        return self.read_bytes_cached_value
