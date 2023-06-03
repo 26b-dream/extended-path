@@ -174,3 +174,29 @@ class TestDelete:
         file.write("Text")
         folder.delete()
         assert folder.exists()
+
+
+class TestCachedRead:
+    def make_initial_file(self):
+        file = ExtendedPath("tests/test_cached_read.txt")
+        file.write("123")
+        return file
+
+    def test_read(self):
+        file = self.make_initial_file()
+        assert file.cached_read() == "123"
+        file.delete()
+
+    def test_changed_file(self):
+        file = self.make_initial_file()
+        file.cached_read()
+        file.write("456")
+        assert file.cached_read() == "123"
+        file.delete()
+
+    def test_updating_cache(self):
+        file = self.make_initial_file()
+        file.cached_read()
+        file.write("456")
+        assert file.cached_read(True) == "456"
+        file.delete()
