@@ -1,4 +1,4 @@
-"""A subclass of pathlib.Path that adds extra functions, conversions and validation"""
+"""A subclass of pathlib.Path that adds extra functions, conversions, and validation"""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 # Using type(Path()) is required to subclass Path but it may break in the future
 # See: https://newbedev.com/subclass-pathlib-path-fails
 class ExtendedPath((type(Path()))):
-    """A subclass of pathlib.Path that adds extra functions, conversions and validation"""
+    """A subclass of pathlib.Path that adds extra functions, conversions, and validation"""
 
     @classmethod
     def _convert_to_path(cls, name: str | bytes | os.PathLike[str] | int | datetime | date | float) -> os.PathLike[str]:

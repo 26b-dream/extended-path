@@ -6,14 +6,15 @@ profile = "black"
 line_length = 120
 
 [tool.pylint]
-disable = "C0301"
-# C0301 - Line too long: Black makes this redundant
+disable = "C0301" # Line too long: Black makes this redundant
 
 [tool.poetry]
 name = "extended_path"
 version = "0.0.1"
-description = "Extended version of Path"
+description = "A subclass of pathlib.Path that adds extra functions, conversions, and validation"
 authors = ["26b_dream <1@1.1>"]
+reasdme = "README.md"
+license = "AGPL-3.0-only"
 
 [tool.poetry.dependencies]
 python = "^3.8"
