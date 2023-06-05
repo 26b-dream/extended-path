@@ -135,7 +135,12 @@ class ExtendedPath((type(Path()))):
         timestamp = timestamp.astimezone()
 
         # If the file exists and there is a timestamp return the result of the comparison
-        return datetime.fromtimestamp(self.stat().st_mtime).astimezone() > timestamp
+        return self.aware_mtime() > timestamp
+
+    def aware_mtime(self) -> datetime:
+        """Get the last modified time of a file as a timezone aware datetime object"""
+
+        return datetime.fromtimestamp(self.stat().st_mtime).astimezone()
 
     def outdated(self, timestamp: Optional[datetime] = None) -> bool:
         """Check if a file does not exist or is outdated"""
