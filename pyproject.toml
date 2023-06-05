@@ -6,7 +6,10 @@ profile = "black"
 line_length = 120
 
 [tool.pylint]
-disable = "C0301" # Line too long: Black makes this redundant
+disable = [
+    "C0301", # line-too-long: Black makes this redundant
+    "E1101", # no-member: Black makes thie redundant and it sometimes has false positives
+]
 
 [tool.poetry]
 name = "extended_path"
