@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import re
 import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+from pathvalidate import validate_filepath
 
 if TYPE_CHECKING:
     import os
@@ -23,84 +26,22 @@ class IllegalLinuxFilenameError(Exception):
 # It's impossible to subclass Path and instead need to subclass the concrete implementation
 # See: https://newbedev.com/subclass-pathlib-path-fails
 class ExtendedPath((type(Path()))):
-    ILLEGAL_STRINGS = (
-        "CON",
-        "PRN",
-        "AUX",
-        "NUL",
-        "COM1",
-        "COM2",
-        "COM3",
-        "COM4",
-        "COM5",
-        "COM6",
-        "COM7",
-        "COM8",
-        "COM9",
-        "LPT1",
-        "LPT2",
-        "LPT3",
-        "LPT4",
-        "LPT5",
-        "LPT6",
-        "LPT7",
-        "LPT8",
-        "LPT9",
-    )
-
-    ILLEGAL_CHARACTERS = (
-        "<",
-        ">",
-        ":",
-        '"',
-        "/",
-        "\\",
-        "|",
-        "?",
-        "*",
-    )
-
     @classmethod
-    def __convert_to_string(cls, name: str | bytes | os.PathLike[str] | int | datetime | date | float) -> Path:
+    def _convert_to_path(cls, name: str | bytes | os.PathLike[str] | int | datetime | date | float) -> Path:
         # Datetime is converted to a unix timestamp
         # Datetime needs to be checked before date because datetime is a subclass of date
         if isinstance(name, datetime):
             name = int(name.timestamp())
 
         # date, int, and float can be safely converted to a string
-        path = Path(str(name))
+        path_as_string = str(name)
 
-        cls.__validate_path_fragment(path)
+        #  Windows, Mac & Linux all support /, for consistency only use this deliminator
+        path_as_string = path_as_string.replace("\\", "/")
+
+        path = Path(str(path_as_string))
 
         return path
-
-    @classmethod
-    def __validate_path_fragment(cls, path_object: Path) -> None:
-        """Validates a path fragment to ensure it is a valid file name on Windows and Linux"""
-
-        # Just a period should never be valid because it is redundant
-        if str(path_object) == ".":
-            raise IllegalWindowsFilenameError(f'"{path_object}" is an illegal name on Windows')
-
-        for path_fragement in path_object.parts:
-            file_stem = Path(path_fragement).stem
-
-            if path_fragement in cls.ILLEGAL_STRINGS or file_stem in cls.ILLEGAL_STRINGS:
-                raise IllegalWindowsFilenameError(f'"{path_object}" is an illegal name on Windows')
-            elif path_fragement.endswith("."):
-                raise IllegalWindowsFilenameError(f'"{path_object}" path segment cannot end with a period on Windows')
-            elif path_fragement.endswith(" "):
-                raise IllegalWindowsFilenameError(f'"{path_object}" path cannot segment end with a space on Windows')
-            elif path_fragement.endswith(" "):
-                raise IllegalWindowsFilenameError(f'"{path_object}" path cannot segment end with a space on Windows')
-            elif path_fragement.endswith("."):
-                raise IllegalWindowsFilenameError(f'"{path_object}" path segment cannot end with a period on Windows')
-            elif any(illegal_character in path_fragement for illegal_character in cls.ILLEGAL_CHARACTERS):
-                raise IllegalWindowsFilenameError(f'"{path_object}" contains illegal characters on Windows')
-            # Linux limits file names based on the byte length of the file name, not the number of characters
-            # Byte length will always be less than the number of characters so just check the byte length
-            if (len(path_fragement.encode("utf-8"))) > 255:
-                raise IllegalLinuxFilenameError(f'"{path_fragement}" is too long to be a valid file name on Linux')
 
     # TypeErrors occur in __new__ so it needs to be where the type modifications take place
     def __new__(
@@ -108,17 +49,19 @@ class ExtendedPath((type(Path()))):
         *args: str | bytes | os.PathLike[str] | int | datetime | date | float,
         **kwargs: str,
     ) -> Self:
-        path_objects: list[str | ExtendedPath | Path] = []
-        args_list = list(args)
+        path_fragments = [cls._convert_to_path(partial_path) for partial_path in args]
 
-        # Convert all path segments to objects that Path can handle
-        for path_fragment in args_list:
-            path_objects.append(cls.__convert_to_string(path_fragment))
+        # Combine path fragments into a single path
+        full_path = Path(*path_fragments)
 
-        return super().__new__(cls, *path_objects)
+        validate_filepath(full_path)
+
+        return super().__new__(cls, *path_fragments)
 
     def __truediv__(self, key: str | bytes | os.PathLike[str] | int | datetime | date | float) -> Self:
-        return super().__truediv__(self.__convert_to_string(key))
+        full_path = super().__truediv__(self._convert_to_path(key))
+        validate_filepath(full_path)
+        return full_path
 
     def up_to_date(self, timestamp: Optional[datetime] = None) -> bool:
         """Check if a file exists and is up to date"""

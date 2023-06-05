@@ -17,6 +17,7 @@ authors = ["26b_dream <1@1.1>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+pathvalidate = "^3.0"
 
 [tool.poetry.group.dev]
 optional = true
