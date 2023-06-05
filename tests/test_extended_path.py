@@ -61,7 +61,7 @@ class TestWrite:
     def test_write_text(self):
         file = ExtendedPath("Temp Test Files/test_write_text.ext")
         file.write("Text")
-        assert file.read_text() == "Text"
+        assert file.read_text(encoding="utf-8") == "Text"
         file.parent.delete()
 
 
