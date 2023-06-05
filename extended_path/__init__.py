@@ -1,8 +1,9 @@
+"""A subclass of pathlib.Path that adds extra functions, conversions and validation"""
+
 from __future__ import annotations
 
-import re
 import shutil
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -10,44 +11,36 @@ from pathvalidate import validate_filepath
 
 if TYPE_CHECKING:
     import os
-    from datetime import date
-    from typing import Optional, Self
+    from typing import Any, Optional, Self
 
 
-class IllegalWindowsFilenameError(Exception):
-    """Raised when a path is an illegal name on Windows"""
-
-
-class IllegalLinuxFilenameError(Exception):
-    """Raised when a file name is too long to be valid on Linux"""
-
-
-# There's a weird issue where with Path when you try to make a subclass of it
-# It's impossible to subclass Path and instead need to subclass the concrete implementation
+# Python's Path implementation is a little bit unsuaul
+# Using type(Path()) is required to subclass Path but it may break in the future
 # See: https://newbedev.com/subclass-pathlib-path-fails
 class ExtendedPath((type(Path()))):
+    """A subclass of pathlib.Path that adds extra functions, conversions and validation"""
+
     @classmethod
-    def _convert_to_path(cls, name: str | bytes | os.PathLike[str] | int | datetime | date | float) -> Path:
+    def _convert_to_path(cls, name: str | bytes | os.PathLike[str] | int | datetime | date | float) -> os.PathLike[str]:
+        """Convert a string, bytes, os.PathLike, int, datetime, date or float to a Path"""
+
         # Datetime is converted to a unix timestamp
         # Datetime needs to be checked before date because datetime is a subclass of date
         if isinstance(name, datetime):
-            name = int(name.timestamp())
+            return Path(str(int(name.timestamp())))
 
-        # date, int, and float can be safely converted to a string
-        path_as_string = str(name)
+        # When these are cast to a string the value is perfectly reasonable
+        elif isinstance(name, (date, float, int, str, bytes)):
+            return Path(str(name))
 
-        #  Windows, Mac & Linux all support /, for consistency only use this deliminator
-        path_as_string = path_as_string.replace("\\", "/")
-
-        path = Path(str(path_as_string))
-
-        return path
+        else:
+            return name
 
     # TypeErrors occur in __new__ so it needs to be where the type modifications take place
     def __new__(
         cls,
         *args: str | bytes | os.PathLike[str] | int | datetime | date | float,
-        **kwargs: str,
+        **kwargs: Any,
     ) -> Self:
         path_fragments = [cls._convert_to_path(partial_path) for partial_path in args]
 
@@ -57,6 +50,14 @@ class ExtendedPath((type(Path()))):
         validate_filepath(full_path)
 
         return super().__new__(cls, *path_fragments)
+
+    def __init__(
+        self,
+        *_args: str | bytes | os.PathLike[str] | int | datetime | date | float,
+    ) -> None:
+        self.read_bytes_cached_value = None
+        self.cached_content_value = None
+        super().__init__()
 
     def __truediv__(self, key: str | bytes | os.PathLike[str] | int | datetime | date | float) -> Self:
         full_path = super().__truediv__(self._convert_to_path(key))
@@ -92,23 +93,21 @@ class ExtendedPath((type(Path()))):
     def write(self, content: bytes | str):
         """Write a bytes or a str object to a file, and will automatically create the directory if needed
 
-        This is useful because str and byte objects need to be written to files with different parameters
-        """
+        This is useful because str and byte objects need to be written to files with different parameters"""
 
         ExtendedPath(self.parent).mkdir(parents=True, exist_ok=True)
 
         if isinstance(content, bytes):
-            with self.open("wb") as f:
-                f.write(content)  # Silly to have this listed twice, but it's required for Pylance
+            with self.open("wb") as file:
+                file.write(content)  # Silly to have this listed twice, but it's required for Pylance
         else:
-            with self.open("w", encoding="utf-8") as f:
-                f.write(content)  # Silly to have this listed twice, but it's required for Pylance
+            with self.open("w", encoding="utf-8") as file:
+                file.write(content)  # Silly to have this listed twice, but it's required for Pylance
 
     def delete(self):
-        """Delete a folder or a file without having to worry about which it is\n
+        """Delete a folder or a file without having to worry about which it is
 
-        This is useful because normally files and folders need to be deleted differently
-        """
+        This is useful because normally files and folders need to be deleted differently"""
 
         if self.exists():
             if self.is_file():
@@ -116,18 +115,18 @@ class ExtendedPath((type(Path()))):
             else:
                 shutil.rmtree(self)
 
-    def read_text_cached(self, reload: bool = False):
+    def read_text_cached(self, reload: bool = False, encoding: str = "utf-8"):
         """Read a file and cache the result to avoid reading the file multiple times"""
 
-        if not hasattr(self, "cached_content_value") or reload:
-            self.cached_content_value = self.read_text()
+        if not self.cached_content_value or reload:
+            self.cached_content_value = self.read_text(encoding=encoding)
 
         return self.cached_content_value
 
     def read_bytes_cached(self, reload: bool = False):
         """Read a file and cache the result to avoid reading the file multiple times"""
 
-        if not hasattr(self, "read_bytes_cached_value") or reload:
+        if not self.read_bytes_cached_value or reload:
             self.read_bytes_cached_value = self.read_bytes()
 
         return self.read_bytes_cached_value

@@ -28,6 +28,7 @@ black = "*"
 isort = "*"
 flake8 = "*"
 pytest = "*"
+pylint = "*"
 
 [build-system]
 requires = ["poetry-core"]
