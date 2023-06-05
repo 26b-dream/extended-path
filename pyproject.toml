@@ -13,7 +13,7 @@ name = "extended_path"
 version = "0.0.1"
 description = "A subclass of pathlib.Path that adds extra functions, conversions, and automatic validation"
 authors = ["26b_dream <1@1.1>"]
-reasdme = "README.md"
+readme = "README.md"
 license = "AGPL-3.0-only"
 
 [tool.poetry.dependencies]
