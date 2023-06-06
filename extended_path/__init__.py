@@ -33,7 +33,7 @@ class ExtendedPath((type(Path()))):
     ) -> Self:
         path_fragments = [cls._convert_to_path(partial_path) for partial_path in args]
         full_path = Path(*path_fragments)
-        validate_filepath(full_path)
+        validate_filepath(full_path, platform="auto")
         return super().__new__(cls, *path_fragments)
 
     # Add extra instance variables used for caching
@@ -48,7 +48,7 @@ class ExtendedPath((type(Path()))):
     # When values are appended to a path the new path should be validated
     def __truediv__(self, key: str | bytes | os.PathLike[str] | int | datetime | date | float) -> Self:
         full_path = super().__truediv__(self._convert_to_path(key))
-        validate_filepath(full_path)
+        validate_filepath(full_path, platform="auto")
         return full_path
 
     @classmethod
